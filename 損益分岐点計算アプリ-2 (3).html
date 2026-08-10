@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ドリンク販売 損益分岐点計算</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;background:#f5f7fb;color:#222}
+.wrap{max-width:520px;margin:auto;padding:18px}
+.card{background:white;border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 3px 15px #00000012}
+h1{font-size:22px;margin:0 0 6px} .sub{color:#666;font-size:13px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-size:13px;color:#555;display:block;margin-bottom:6px}
+input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:17px}
+.result{background:#f0f7ff;border-radius:14px;padding:18px;text-align:center}
+.big{font-size:38px;font-weight:800;margin:5px 0}.unit{font-size:15px;color:#555}
+.ok{color:#16834a}.ng{color:#c33}
+table{width:100%;border-collapse:collapse;font-size:14px}td{padding:8px 0;border-bottom:1px solid #eee}td:last-child{text-align:right;font-weight:600}
+button{width:100%;padding:13px;border:0;border-radius:11px;font-size:15px;background:#222;color:white;margin-top:10px}
+.note{font-size:12px;color:#777;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🍹 ドリンク販売 損益分岐点</h1>
+    <div class="sub">実働時間と販売杯数を入力するだけで、その日の収支を自動計算</div>
+    <div class="grid">
+      <div><label>実働時間（h）</label><input id="hours" type="number" min="0" step="0.01" value="5"></div>
+      <div><label>売上杯数</label><input id="cups" type="number" min="0" step="1" value="20"></div>
+      <div><label>時給（円）</label><input id="wage" type="number" min="0" step="1" value="1040"></div>
+      <div><label>売価（円/杯）</label><input id="price" type="number" min="0" step="1" value="500"></div>
+      <div><label>原価率（%）</label><input id="costRate" type="number" min="0" max="100" step="0.1" value="30"></div>
+    </div>
+    <button onclick="calc()">計算する</button>
+  </div>
+
+  <div class="card result">
+    <div>この日の損益分岐点</div>
+    <div class="big" id="be">15杯</div>
+    <div class="unit" id="beHour">損益分岐：約3.00杯/h</div>
+    <div id="judge" class="ok">黒字ラインです</div>
+  </div>
+
+  <div class="card">
+    <table>
+      <tr><td>売上</td><td id="sales">10,000円</td></tr>
+      <tr><td>原価</td><td id="cost">3,000円</td></tr>
+      <tr><td>人件費</td><td id="labor">5,200円</td></tr>
+      <tr><td>利益</td><td id="profit">1,800円</td></tr>
+      <tr><td>利益率</td><td id="margin">18.0%</td></tr>
+      <tr><td>販売数 ÷ 実働</td><td id="cupsHour">4.00杯/h</td></tr>
+      <tr><td>損益分岐まで</td><td id="gap">あと0杯</td></tr>
+    </table>
+  </div>
+
+  <div class="card note">
+    <b>計算方法</b><br>
+    原価＝売価×原価率<br>
+    1杯あたり粗利益＝売価−原価<br>
+    損益分岐杯数＝人件費÷1杯あたり粗利益<br>
+    ※端数は「実際に必要な杯数」として切り上げ表示します。
+  </div>
+</div>
+<script>
+function yen(n){return Math.round(n).toLocaleString('ja-JP')+'円'}
+function calc(){
+  const h=Number(document.getElementById('hours').value)||0;
+  const cups=Number(document.getElementById('cups').value)||0;
+  const wage=Number(document.getElementById('wage').value)||0;
+  const price=Number(document.getElementById('price').value)||0;
+  const rate=(Number(document.getElementById('costRate').value)||0)/100;
+  const costPer=price*rate;
+  const unitProfit=price-costPer;
+  const labor=h*wage;
+  const sales=cups*price;
+  const cost=cups*costPer;
+  const profit=sales-cost-labor;
+  const margin=sales?profit/sales*100:0;
+  const be=unitProfit>0?Math.ceil(labor/unitProfit):0;
+  const beHour=unitProfit>0?wage/unitProfit:0;
+  const cupsHour=h?cups/h:0;
+  document.getElementById('be').textContent=be+'杯';
+  document.getElementById('beHour').textContent='損益分岐：約'+beHour.toFixed(2)+'杯/h';
+  document.getElementById('sales').textContent=yen(sales);
+  document.getElementById('cost').textContent=yen(cost);
+  document.getElementById('labor').textContent=yen(labor);
+  document.getElementById('profit').textContent=yen(profit);
+  document.getElementById('margin').textContent=margin.toFixed(1)+'%';
+  document.getElementById('cupsHour').textContent=cupsHour.toFixed(2)+'杯/h';
+  const judge=document.getElementById('judge');
+  if(cups>=be){judge.textContent='🟢 黒字ラインです';judge.className='ok'}
+  else {judge.textContent='🔴 損益分岐点未達です';judge.className='ng'}
+  document.getElementById('gap').textContent=cups>=be?'達成！':'あと'+(be-cups)+'杯';
+}
+document.querySelectorAll('input').forEach(x=>x.addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>
